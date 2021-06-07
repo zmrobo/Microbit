@@ -6,9 +6,6 @@
     "dependencies": {
         "core": "*",
         "ws2812b": "github:microsoft/pxt-ws2812b#v0.1.1",
-        "TM1637": "github:zhuning239/TM1637",
-        "neopixel": "github:kittenbot/pxt-neopixel#v0.6.13",
-        "pxt-sonar": "github:Microsoft/pxt-sonar",
         "microphone": "*"
     },
     "files": [
