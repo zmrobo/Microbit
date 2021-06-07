@@ -1,0 +1,10 @@
+.yotta.json
+build
+*.swp
+*.log
+test.cpp
+yotta_modules
+yotta_targets
+Makefile.local
+ext
+upload.tar.gz
