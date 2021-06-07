@@ -1,0 +1,23 @@
+{
+	"zmrobo.AICameraSet|block": "设置 AI视觉模块模式|%index",
+	"zmrobo.AICamDataGet|block": "读取 AI视觉模块数据|%index",
+	"zmrobo.ping|block": "引脚 trig %trig|echo %echo|单位 %unit",
+	"zmrobo.TM1637LEDs.intensity|block": "数码管 %tm|设置 亮度 %val",
+	"zmrobo.TM1637LEDs.showbit|block": "数码管 %tm|显示 数字 %num |位号 %bit",
+	"zmrobo.TM1637LEDs.showNumber|block": "数码管 %tm|显示 数字 %num",
+	"zmrobo.TM1637LEDs.showHex|block": "数码管 %tm|显示 16进制数 %num",
+	"zmrobo.TM1637LEDs.showDP|block": "数码管 %tm|显示  ：%show",
+	"zmrobo.TM1637LEDs.clear|block": "数码管 清屏 %tm",
+	"zmrobo.TM1637LEDs.on|block": "数码管 开 %tm",
+	"zmrobo.TM1637LEDs.off|block": "数码管 关 %tm",
+	"zmrobo.create1637|block": "CLK %clk|DIO %dio|亮度 %intensity|LED 位数 %count",
+	"zmrobo.create|block": "引脚%pin",
+	"zmrobo.hsl|block": "色相 %h|饱和度 %s|亮度 %l",
+	"zmrobo.Strip.showColor|block": "%strip|显示颜色%rgb=neopixel_colors",
+	"zmrobo.Servo|block": "舵机|%index|角度 %degree",
+	"zmrobo.MotorRun|block": "电机|%index|速度 %speed",
+	"zmrobo.MotorRunDual|block": "电机|%motor1|速度 %speed1|%motor2|速度 %speed2",
+	"zmrobo.MotorRunDelay|block": "电机|%index|速度 %speed|延时 %delay|s",
+	"zmrobo.MotorStop|block": "电机 停止|%index|",
+	"zmrobo.MotorStopAll|block": "停止所有电机"
+}

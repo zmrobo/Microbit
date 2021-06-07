@@ -1,0 +1,25 @@
+{
+    "name": "ZMROBO",
+    "version": "1.0.1",
+    "description": "ZMROBO 1.0.1版本",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*",
+        "ws2812b": "github:microsoft/pxt-ws2812b#v0.1.1",
+        "microphone": "*"
+    },
+    "files": [
+        "README.md",
+        "main.blocks",
+        "zmrobo.ts",
+        "_locales/zh-cn/ZMROBO-strings.json"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true,
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "blocksprj"
+}
