@@ -1,5 +1,5 @@
 {
-	"zmrobo.AICameraSet|block": "设置 AI111视觉模块模式|%index",
+	"zmrobo.AICameraSet|block": "设置 AI视觉模块模式|%index",
 	"zmrobo.AICamDataGet|block": "读取 AI视觉模块数据|%index",
 	"zmrobo.ping|block": "引脚 trig %trig|echo %echo|单位 %unit",
 	"zmrobo.TM1637LEDs.intensity|block": "数码管 %tm|设置 亮度 %val",
