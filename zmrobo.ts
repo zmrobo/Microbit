@@ -371,13 +371,14 @@ namespace zmrobo {
         buf[18] = 0
         buf[19] = 207
         serial.writeBuffer(buf)
-}
+    }
+
 /*
 //AI摄像头传感器
 //中鸣添加，获取BE1743或BE1748数据
 */
 //% blockId=robotbit_AICamDataGet block="AICamDataGet|%index"
-//% weight=202
+//% weight=202   
 export function AICamDataGet(index: number): any {
     let var1 = 0
     let revdata = control.createBuffer(20)
@@ -385,6 +386,7 @@ export function AICamDataGet(index: number): any {
     var1 = revdata[index + 4]
     return var1
 }
+    
     /*
     //超声波测距模块
     //融合添加
@@ -912,12 +914,13 @@ export function AICamDataGet(index: number): any {
     //% trackArgs=0,2
     //% blockSetVariable=strip
     export function create(pin: DigitalPin): Strip {
+        let mode = NeoPixelMode.RGB;
         let strip = new Strip();
-        let stride = NeoPixelMode.RGB;
+        let stride = NeoPixelMode.RGBW ? 4 : 3;
         strip.buf = pins.createBuffer(1 * stride);
         strip.start = 0;
         strip._length = 1;
-        strip._mode = stride || NeoPixelMode.RGB;
+        strip._mode = mode || NeoPixelMode.RGB;
         strip._matrixWidth = 0;
         strip.setBrightness(128)
         strip.setPin(pin)
