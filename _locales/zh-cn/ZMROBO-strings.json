@@ -1,6 +1,7 @@
 {
-	"zmrobo.AICameraSet|block": "设置 AI视觉模块模式|%index",
-	"zmrobo.AICamDataGet|block": "读取 AI视觉模块数据|%index",
+	"zmrobo.SetAICamera|block": "设置 AI视觉模块模式|%index",
+	"zmrobo.GetAICamData|block": "读取 AI视觉模块数据|%index",
+	"zmrobo.GetRFModuleRemoteButton|block": "读取 通过无线模块读取手柄的键值",
 	"zmrobo.ping|block": "引脚 trig %trig|echo %echo|单位 %unit",
 	"zmrobo.TM1637LEDs.intensity|block": "数码管 %tm|设置 亮度 %val",
 	"zmrobo.TM1637LEDs.showbit|block": "数码管 %tm|显示 数字 %num |位号 %bit",
@@ -15,6 +16,7 @@
 	"zmrobo.hsl|block": "色相 %h|饱和度 %s|亮度 %l",
 	"zmrobo.Strip.showColor|block": "%strip|显示颜色%rgb=neopixel_colors",
 	"zmrobo.Servo|block": "舵机|%index|角度 %degree",
+	"zmrobo.SetServoMotor|block": "舵机马达模式|%index|速度 %speed",
 	"zmrobo.MotorRun|block": "电机|%index|速度 %speed",
 	"zmrobo.MotorRunDual|block": "电机|%motor1|速度 %speed1|%motor2|速度 %speed2",
 	"zmrobo.MotorRunDelay|block": "电机|%index|速度 %speed|延时 %delay|s",

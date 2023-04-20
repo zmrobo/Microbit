@@ -55,6 +55,7 @@ load dependency
 //% color="#31C7D5" weight=10 icon="\uf1d0" block="ZMROBO"
 namespace zmrobo {
     const PCA9685_ADDRESS = 0x40
+    const I2C_W = 0x50
     const MODE1 = 0x00
     const MODE2 = 0x01
     const SUBADR1 = 0x02
@@ -91,6 +92,12 @@ namespace zmrobo {
     const HT16K33_BLINK_1HZ = 2
     const HT16K33_BLINK_HALFHZ = 3
     const HT16K33_CMD_BRIGHTNESS = 0xE0
+
+    const I2C_ADDR_W = 0xA0         //I2C写地址
+    const I2C_ADDR_R = 0xA1         //I2C读地址
+
+
+    const SDA_Read = pins.P15.digitalRead();
 
     // TM1637
     let TM1637_CMD1 = 0x40;
@@ -132,9 +139,160 @@ namespace zmrobo {
     
     let initialized = false
     let initializedMatrix = false
-    let neoStrip: zmrobo.Strip;
+  //  let neoStrip: zmrobo.Strip;
     let matBuf = pins.createBuffer(17);
     let distanceBuf = 0;
+    function I2C_Delay(us:number):void{
+        for(let i=0;i<1*us;i++);
+       
+    }
+    //P14SCL
+    //P15SDA
+    function I2C_Start():void{
+
+        pins.P14.digitalWrite(true);        //SCL高
+        pins.P15.digitalWrite(true);        //SDA高
+        I2C_Delay(1);
+        pins.P15.digitalWrite(false);        //SDA低
+        I2C_Delay(1);
+        pins.P14.digitalWrite(false);        //SCL低
+
+    }
+
+    //P14SCL
+    //P15SDA
+    function I2C_Stop():void{
+
+        pins.P15.digitalWrite(false);        //SDA低
+        I2C_Delay(1);
+        pins.P14.digitalWrite(true);        //SCL高
+        I2C_Delay(1);
+        pins.P15.digitalWrite(true);        //SDA高
+        I2C_Delay(2);
+
+    }
+
+    //P14SCL
+    //P15SDA
+    function I2C_ACK():void{
+
+        pins.P14.digitalWrite(false);        //SCL低
+        I2C_Delay(1);
+        pins.P15.digitalWrite(false);        //SDA低
+        I2C_Delay(1);
+        pins.P14.digitalWrite(true);        //SCL高
+        I2C_Delay(1);
+        pins.P14.digitalWrite(false);        //SCL低
+        I2C_Delay(1);
+
+    }
+
+    //P14SCL
+    //P15SDA
+    function I2C_NoACK():void{
+
+        pins.P14.digitalWrite(false);        //SCL低
+        I2C_Delay(1);
+        pins.P15.digitalWrite(true);        //SDA高
+        I2C_Delay(1);
+        pins.P14.digitalWrite(true);        //SCL高
+        I2C_Delay(1);
+        pins.P14.digitalWrite(false);        //SCL低
+        I2C_Delay(1);
+
+    }
+
+
+    //P14SCL
+    //P15SDA
+    function I2C_WaitACK():boolean{
+
+        let val 
+        pins.P14.digitalWrite(true);        //SCL高
+        I2C_Delay(1);
+        val = pins.P15.digitalRead();
+        I2C_Delay(1);
+        pins.P14.digitalWrite(false);        //SCL低
+        I2C_Delay(1);
+        return val;
+    }
+
+    //P14SCL
+    //P15SDA
+    //写入数据
+    function I2C_SendByte(val:number):void{
+
+        for(let i=0;i<8;i++)
+        {
+            if(val & 0x80)
+            { pins.P15.digitalWrite(true); }        //SDA高
+            else
+            { pins.P15.digitalWrite(false);}        //SDA低
+            pins.P14.digitalWrite(true);        //SCL高
+            I2C_Delay(3);
+            pins.P14.digitalWrite(false);        //SCL低
+            I2C_Delay(1);
+            val = val <<1;
+        }
+       // SDA_Read;
+    }
+
+    //P14SCL
+    //P15SDA
+    //读取数据
+    function I2C_RecvByte(test:number):number{
+        let val = 0;
+        //SDA_Read;
+       pins.P15.digitalRead();
+        for(let i=0;i<8;i++)
+        {
+            I2C_Delay(1);
+            pins.P14.digitalWrite(false);        //SCL低
+            I2C_Delay(1);
+            pins.P14.digitalWrite(true);         //SCL高
+            val = val << 1;
+            if(pins.P15.digitalRead())
+            {
+                val++;
+            }
+
+        }
+        pins.P14.digitalWrite(false);        //SCL低
+         I2C_Delay(1);
+        if(test)
+        {
+            pins.P15.digitalWrite(false);        //SDA低
+        }
+        else
+        {
+            pins.P15.digitalWrite(true);  
+        }      //SDA低}
+        I2C_Delay(1);
+        pins.P14.digitalWrite(true);        //SCL高
+        I2C_Delay(1);
+        pins.P14.digitalWrite(false);        //SCL低
+        I2C_Delay(1);
+        return val;
+    }
+
+    //P14SCL
+    //P15SDA
+    //写入数据
+    function I2C_WriteData(addr:number,reg:number,data:number):boolean{
+        I2C_Start();
+        I2C_SendByte(addr << 1 | 0);
+        if(I2C_WaitACK()){
+            I2C_Stop();
+            return false;
+        }
+        I2C_SendByte(reg);
+        I2C_WaitACK();
+        I2C_SendByte(data);
+        I2C_WaitACK();
+        I2C_Stop();
+        return true
+        
+    }
 
     function i2cwrite(addr: number, reg: number, value: number) {
         let buf = pins.createBuffer(2)
@@ -149,11 +307,19 @@ namespace zmrobo {
         pins.i2cWriteBuffer(addr, buf)
     }
 
+
     function i2cread(addr: number, reg: number) {
         pins.i2cWriteNumber(addr, reg, NumberFormat.UInt8BE);
         let val = pins.i2cReadNumber(addr, NumberFormat.UInt8BE);
         return val;
     }
+
+   export function ReadReg(reg: number): number{
+    let val = i2cread(0xA1,reg);
+    return val;
+   }
+
+
 
     function initPCA9685(): void {
         i2cwrite(PCA9685_ADDRESS, MODE1, 0x00)
@@ -183,10 +349,10 @@ namespace zmrobo {
     function setPwm(channel: number, on: number, off: number): void {
         if (channel < 0 || channel > 15)
             return;
-        //serial.writeValue("ch", channel)
+        /* //serial.writeValue("ch", channel)
         //serial.writeValue("on", on)
         //serial.writeValue("off", off)
-        
+        */
         let buf = pins.createBuffer(5);
         buf[0] = LED0_ON_L + 4 * channel;
         buf[1] = on & 0xff;
@@ -237,9 +403,14 @@ namespace zmrobo {
     }
 
     function matrixShow() {
+        pins.analogSetPeriod
         matBuf[0] = 0x00;
         pins.i2cWriteBuffer(HT16K33_ADDRESS, matBuf);
     }
+
+
+
+
 
     /**
      * Servo Execute
@@ -259,6 +430,40 @@ namespace zmrobo {
         let value = v_us * 4096 / 20000
         setPwm(index + 7, 0, value)
     }
+
+        /**
+     * Set the speed of the steering gear motor mode
+     * @param index Servo Channel; eg: S1
+     * @param speed [-100-100] 
+    */
+    //% blockId=robotbit_SetServoMotor block="SetServoMotor|%index|speed %speed"
+    //% weight=100
+    //% speed.min=-100 speed.max=100
+    //% name.fieldEditor="gridpicker" name.fieldOptions.columns=4
+    export function SetServoMotor(index: Servos, speed: number): void {
+        let v_us;
+        if (!initialized) {
+            initPCA9685()
+        }
+        if(speed < 0)
+        {
+            speed += 100;
+            v_us = (speed * 1800 / 180 + 3500) // 0.6 ~ 2.4
+        }
+        else if(speed > 0)
+        {
+            v_us = (speed * 1800 / 180 + 4500) // 0.6 ~ 2.4
+        }
+        else
+        {
+            v_us = 4500 // 0.6 ~ 2.4
+        }
+        // 50hz: 20,000 us
+        //let v_us = (degree * 1800 / 180 + 3500) // 0.6 ~ 2.4
+        let value = v_us * 4096 / 20000
+        setPwm(index + 7, 0, value)
+    }
+
 
     //% blockId=robotbit_motor_run block="Motor|%index|speed %speed"
     //% weight=85
@@ -323,13 +528,19 @@ namespace zmrobo {
     }
 
 
-
+    /**
+    * Stop Motor  
+    * @param index Motor index M1|M2
+    */
     //% blockId=robotbit_stop block="Motor Stop|%index|"
     //% weight=80
     export function MotorStop(index: Motors): void {
         MotorRun(index, 0);
     }
 
+    /**
+    * Stop Motor ALL 
+    */
     //% blockId=robotbit_stop_all block="Motor Stop All"
     //% weight=79
     //% blockGap=50
@@ -346,9 +557,12 @@ namespace zmrobo {
     //AI摄像头传感器
     //中鸣添加，设置BE1743或BE1748功能
     */
-    //% blockId=robotbit_AICameraSet block="AICameraSet|%index"
+    /**
+    * Set the AI camera sensor mode. 
+    */
+    //% blockId=robotbit_SetAICamera block="SetAICamera|%index"
     //% weight=203
-    export function AICameraSet(index: number): void {
+    export function SetAICamera(index: number): void {
         let buf = control.createBuffer(20)
         buf[0] = 134
         buf[1] = 171
@@ -377,15 +591,256 @@ namespace zmrobo {
 //AI摄像头传感器
 //中鸣添加，获取BE1743或BE1748数据
 */
-//% blockId=robotbit_AICamDataGet block="AICamDataGet|%index"
+ /**
+    * Read the sensor data of the AI camera. 
+*/
+//% blockId=robotbit_GetAICamData block="GetAICamData|%index"
 //% weight=202   
-export function AICamDataGet(index: number): any {
+export function GetAICamData(index: number): any {
     let var1 = 0
     let revdata = control.createBuffer(20)
     revdata = serial.readBuffer(20)
     var1 = revdata[index + 4]
     return var1
 }
+
+
+function I2C_writeNByte(addr: number,buf:Buffer) {
+    pins.i2cWriteBuffer(addr, buf)
+}
+
+function I2C_writeByte(addr:number,value:number,repeated?: boolean):void{
+    pins.i2cWriteNumber(addr,value,NumberFormat.UInt8LE,repeated);
+}
+
+function I2C_readByte(addr:number,value:number,repeated?: boolean):Buffer{
+    let buf = control.createBuffer(value);
+    
+    buf = pins.i2cReadBuffer(addr,value,repeated);
+    
+    return buf;
+}
+
+
+
+/*
+//通过无线模块读取键值
+//中鸣添加，获取BE9242
+*/
+ /**
+    * Key values are read through the wireless module. 
+*/
+//% blockId=robotbit_GetRFModuleRemoteButton block="GetRFModuleRemoteButton"
+//% weight=203   
+export function GetRFModuleRemoteButton(): any {
+    let code  = 0;
+    let k = 0x01;
+    let data = 0;
+    let n=0;
+    let buf_w = control.createBuffer(6); 
+    let buf_r = control.createBuffer(16);
+    buf_w[0] = 0xAA;
+    buf_w[1] = 0x55;
+    buf_w[2] = 0x05;
+    buf_w[3] = 0x04;
+    buf_w[4] = 0x00;
+    buf_w[5] = 0x09;
+    I2C_writeNByte(I2C_W,buf_w);
+
+    I2C_Delay(10);
+    // //读数
+
+    buf_r = I2C_readByte(I2C_W,16,false);
+   // buf_r[15] = pins.i2cReadBuffer(I2C_W,1,false);
+
+    //if(buf_r[0] == 0x56 && buf_r[1] == 0xAB && buf_r[2] == 0x05 && buf_r[15] == 0xCF)
+    if(buf_r[0] == 0x56 &&buf_r[1] == 0xAB && buf_r[2] == 0x05 && buf_r[15] == 0xCF)
+    {
+        code=buf_r[3]*0x1000000+buf_r[4]*0x10000+buf_r[5]*0x100+buf_r[6];
+        //code=buf_r[5]*256+buf_r[6];
+        //code=buf_r[6];
+        for(n=0;n<20;n++)
+        {
+            
+            if(code&(k<<n))
+            {
+                data = n;
+                if(code&(k<<26))
+                {
+                    data +=20;
+                }
+                break;
+            }
+        }
+    }      
+    
+    return data;
+}
+
+/*
+//通过无线模块读取键码
+//中鸣添加，获取BE9242
+//	 "zmrobo.GetRFModuleRemoteCode|block": "读取 通过无线模块读取手柄的键码",
+*/
+/*
+//% blockId=robotbit_GetRFModuleRemoteCode block="GetRFModuleRemoteCode"
+//% weight=202   
+*/
+// export function GetRFModuleRemoteCode(): any {
+//     let code  = 0;
+//     let buf_w = control.createBuffer(6); 
+//     let buf_r = control.createBuffer(16);
+//     buf_w[0] = 0xAA;
+//     buf_w[1] = 0x55;
+//     buf_w[2] = 0x05;
+//     buf_w[3] = 0x04;
+//     buf_w[4] = 0x00;
+//     buf_w[5] = 0x09;
+//     I2C_writeNByte(I2C_W,buf_w);
+
+//     I2C_Delay(10);
+//     // //读数
+
+//     buf_r = I2C_readByte(I2C_W,16,false);
+
+//     if(buf_r[0] == 0x56 && buf_r[1] == 0xAB && buf_r[2] == 0x05 && buf_r[15] == 0xCF)
+//     {
+//         code = buf_r[3]*0x1000000+buf_r[4]*10000+buf_r[5]*0x100+buf_r[6];
+//     }      
+    
+//     return code
+// }
+
+/* 重新映射的P14和P15引脚为I2C模式 */
+
+/*
+//通过无线模块读取键值
+//中鸣添加，获取BE9242
+*/
+/*
+//% blockId=robotbit_GetRFModuleRemoteButton14_15 block="GetRFModuleRemoteButton14_15|%index"
+//% weight=202   
+*/
+// export function GetRFModuleRemoteButton14_15(index: number): any {
+//     let check_sum = 0;
+//     let code  = 0;
+//     let k = 1;
+//     let data = 999;
+//     let buf = control.createBuffer(16);
+//     //写数据
+//     I2C_Start();
+//     I2C_SendByte(I2C_ADDR_W);
+//     I2C_WaitACK();
+//     I2C_SendByte(0xAA);
+//     I2C_WaitACK();
+//     I2C_SendByte(0x55);
+//     I2C_WaitACK();
+//     I2C_SendByte(0x05);
+//     I2C_WaitACK();
+//      check_sum += 0x05;
+//     I2C_SendByte(0x04);
+//     I2C_WaitACK();
+//      check_sum += 0x04;
+//     I2C_SendByte(0x00);
+//     I2C_WaitACK();
+//      check_sum += 0x00;
+
+//     I2C_SendByte(check_sum);
+//     I2C_WaitACK();
+
+//     I2C_Stop();      
+
+//     I2C_Delay(10);
+//     //读数据
+//     I2C_Start();
+//     I2C_SendByte(I2C_ADDR_R);       //读模式
+//     I2C_WaitACK();
+//     for(let n=0;n<15;n++)
+//     {
+//         buf[n] = I2C_RecvByte(1);
+//     }
+//     buf[15] = I2C_RecvByte(0);
+
+//     I2C_Stop();
+
+//     if(buf[0] == 0x56 && buf[1] == 0xAB && buf[2] == 0x05 && buf[15] == 0xCF)
+//     {
+//         code = buf[3]*0x1000000+buf[4]*10000+buf[5]*0x100+buf[6];
+//         for(let n=0;n<20;n++)
+//         {
+//             if(code&(k<<n))
+//             {
+//                 data = n;
+//                 if(code&(k<<26))
+//                 {
+//                     data +=20;
+//                 }
+//                 break;
+//             }
+//         }
+//     }      
+    
+//     return data
+// }
+
+/*
+//通过无线模块读取键码
+//中鸣添加，获取BE9242
+*/
+/*
+//% blockId=robotbit_GetRFModuleRemoteCode14_15 block="GetRFModuleRemoteCode14_15|%index"
+//% weight=202   
+*/
+// export function GetRFModuleRemoteCode14_15(index: number): any {
+//     let check_sum = 0;
+//     let code  = 0;
+//     let buf = control.createBuffer(16);
+    
+//     //写数据
+//     I2C_Start();
+//     I2C_SendByte(I2C_ADDR_W);
+//     I2C_WaitACK();
+//     I2C_SendByte(0xAA);
+//     I2C_WaitACK();
+//     I2C_SendByte(0x55);
+//     I2C_WaitACK();
+//     I2C_SendByte(0x05);
+//     I2C_WaitACK();
+//      check_sum += 0x05;
+//     I2C_SendByte(0x04);
+//     I2C_WaitACK();
+//      check_sum += 0x04;
+//     I2C_SendByte(0x00);
+//     I2C_WaitACK();
+//      check_sum += 0x00;
+
+//     I2C_SendByte(check_sum);
+//     I2C_WaitACK();
+
+//     I2C_Stop();      
+
+//     //读数据
+//     I2C_Start();
+//     I2C_SendByte(I2C_ADDR_R);       //读模式
+//     I2C_WaitACK();
+//     for(let n=0;n<15;n++)
+//     {
+//         buf[n] = I2C_RecvByte(1);
+//        // I2C_ACK;
+//     }
+//     buf[15] = I2C_RecvByte(0);
+//     //I2C_NoACK;
+
+//     I2C_Stop();
+
+//     if(buf[0] == 0x56 && buf[1] == 0xAB && buf[2] == 0x05 && buf[15] == 0xCF)
+//     {
+//         code = buf[3]*0x1000000+buf[4]*10000+buf[5]*0x100+buf[6];
+
+//     }      
+    
+//     return code
+// }
     
     /*
     //超声波测距模块
@@ -411,6 +866,7 @@ export function AICamDataGet(index: number): any {
             default: return d ;
         }
     }
+   
 
     export class TM1637LEDs {
         buf: Buffer;
